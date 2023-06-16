@@ -1,0 +1,40 @@
+#'''Parameters config.'''#
+
+
+# --- binning_algorithms --- #
+
+min_contig_len:   500
+
+
+# --- metabat2_binning --- #
+
+min_metabat_len:  1500
+
+
+# --- concoct_binning --- #
+
+fragment_size:    1500
+overlap_size:     0
+
+
+# --- vamb_binning --- #
+
+min_bin_size: 100
+# Test-only-values: '-e 2 -t 2 -q 1'
+# Keep blank for actual runs
+test_flags: '-e 2 -t 2 -q 1'
+
+
+# --- semibin_binning --- #
+
+model_environment: 'human_gut'
+
+
+# --- maxbin2_binning --- #
+
+maxbin2_script: '/path/to/MaxBin-2.2.7/run_MaxBin.pl'
+
+
+# --- das_tool_refinement --- #
+
+ext: '/path/to/camp_binning/workflow/ext'

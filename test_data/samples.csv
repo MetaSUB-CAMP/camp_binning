@@ -1,0 +1,4 @@
+sample_name,illumina_ctgs,illumina_fwd,illumina_rev
+uhgg_metaspades,/path/to/camp_binning/test_data/uhgg.metaspades.fasta,/path/to/camp_binning/test_data/uhgg_1.fastq.gz,/path/to/camp_binning/test_data/uhgg_2.fastq.gz
+uhgg_megahit,/path/to/camp_binning/test_data/uhgg.megahit.fasta,/path/to/camp_binning/test_data/uhgg_1.fastq.gz,/path/to/camp_binning/test_data/uhgg_2.fastq.gz
+

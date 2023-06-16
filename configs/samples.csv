@@ -1,0 +1,2 @@
+sample_name,illumina_ctg,illumina_fwd,illumina_rev
+sample_name,/path/to/data/sample.fasta,/path/to/data/sample_1.fastq.gz,/path/to/data/sample_2.fastq.gz
