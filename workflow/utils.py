@@ -67,10 +67,13 @@ class Workflow_Dirs:
 def cleanup_files(work_dir, df):
     smps = list(df.index)
     for s in smps:
-        os.remove(join(work_dir, 'binning', '0_contig_coverage', s, 'coverage.bam'))
-        os.remove(join(work_dir, 'binning', '0_contig_coverage', s, 'coverage.sort.bam'))
-        os.remove(join(work_dir, 'binning', '0_contig_coverage', s, 'coverage.sort.bam.bai'))
+        for f in glob.glob(join(work_dir, 'binning', '0_contig_coverage', s, 'coverage.*')):
+            os.remove(abspath(f))
+        for f in glob.glob(join(work_dir, 'binning', '0_contig_coverage', s, '*.bt*')):
+            os.remove(abspath(f))
         for f in glob.glob(join(work_dir, 'binning', '2_concoct', s, '*.fasta')):
+            os.remove(abspath(f))
+        for f in glob.glob(join(work_dir, 'binning', '2_concoct', s, 'original_data_gt*')):
             os.remove(abspath(f))
         shutil.rmtree(join(work_dir, 'binning', '3_semibin', s, 'output_prerecluster_bins'))
 

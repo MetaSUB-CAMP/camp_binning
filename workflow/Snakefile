@@ -29,6 +29,7 @@ rule all:
     input:
         join(dirs.OUT, 'final_reports', 'samples.csv'), # sample name, bin directories
         join(dirs.OUT, 'final_reports', 'bin_stats.csv'),
+        join(dirs.OUT, 'final_reports', 'bin_summ.csv')
 
 
 # --- Workflow steps --- #
@@ -230,7 +231,7 @@ rule semibin_binning:
     shell:
         """
         rm -r {params.out_dir}
-        SemiBin single_easy_bin --input-fasta {input.ctg} --input-bam {input.bam} --environment {params.meta_env} \
+        SemiBin single_easy_bin -t {threads} --input-fasta {input.ctg} --input-bam {input.bam} --environment {params.meta_env} \
             --min-len {params.min_len} --output {params.out_dir} > {log} 2>&1
         """
 
@@ -399,15 +400,19 @@ rule move_dastool_bins:
 
 rule step_statistics:
     input:
-        join(dirs.OUT, '{binner}', '{sample}_done.txt'),
+        ctg = join(dirs.TMP, '{sample}.fasta'),
+        step = join(dirs.OUT, '{binner}', '{sample}_done.txt'),
     output:
         join(dirs.OUT, '{binner}', '{sample}', 'bin_stats.csv'),
+        join(dirs.OUT, '{binner}', '{sample}', 'bin_summ.csv'),
     params:
         in_dir = join(dirs.OUT, '{binner}', '{sample}', 'bins'),
+        out_dir = join(dirs.OUT, '{binner}', '{sample}'),
+        min_len=config['min_contig_len'],
         calc_script = join(dirs_scr,'calc_bin_lens.py'),
     shell:
         """
-        python {params.calc_script} {params.in_dir} {output}
+        python {params.calc_script} {input.ctg} {params.min_len} {params.in_dir} {params.out_dir}
         """
 
 
@@ -419,6 +424,17 @@ rule concat_statistics:
     shell:
         """
         echo -e 'sample_name,binner,bin_num,num_ctgs,total_size,mean_bin_size,stdev_bin_size' | cat - {input} > {output}
+        """
+
+
+rule concat_summaries:
+    input:
+        expand(join(dirs.OUT, '{binner}', '{sample}', 'bin_summ.csv'), binner = BINNERS + ['5_dastool'], sample = SAMPLES),
+    output:
+        join(dirs.OUT, 'final_reports', 'bin_summ.csv'),
+    shell:
+        """
+        echo -e 'sample_name,binner,num_binned_ctgs,num_binned_bases,prop_asm_binned,mean_binned_size,stdev_binned_size,num_unbinned_ctgs,num_unbinned_bases,prop_asm_unbinned,mean_unbinned_size,stdev_unbinned_size' | cat - {input} > {output}
         """
 
 
