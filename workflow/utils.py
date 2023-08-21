@@ -13,6 +13,14 @@ import pandas as pd
 import shutil
 
 
+def extract_from_gzip(ap, out):
+    if open(ap, 'rb').read(2) == b'\x1f\x8b': # If the input is gzipped
+        with gzip.open(ap, 'rb') as f_in, open(out, 'wb') as f_out:
+            shutil.copyfileobj(f_in, f_out)
+    else: # Otherwise, symlink
+        symlink(ap, out)
+
+
 def scrub_fasta_tags(fi, fo):
     with open(fi, 'r') as f_in, open(fo, 'w') as f_out:
         for l in f_in:
@@ -25,14 +33,14 @@ def scrub_fasta_tags(fi, fo):
 def ingest_samples(samples, tmp):
     df = pd.read_csv(samples, header = 0, index_col = 0) # name, ctgs, fwd, rev
     s = list(df.index)
-    lst = df.values.tolist()
+    lst = [str(l) for l in df.values.tolist()]
     for i,l in enumerate(lst):
         if not exists(join(tmp, s[i] + '.fasta')):
             scrub_fasta_tags(l[0], join(tmp, s[i] + '.fasta'))
             # symlink(abspath(l[0]), join(tmp, s[i] + '.fasta'))
         if not exists(join(tmp, s[i] + '_1.fastq.gz')):
-            symlink(abspath(l[1]), join(tmp, s[i] + '_1.fastq.gz'))
-            symlink(abspath(l[2]), join(tmp, s[i] + '_2.fastq.gz'))
+            extract_from_gzip(abspath(l[1]), join(tmp, s[i] + '_1.fastq'))
+            extract_from_gzip(abspath(l[2]), join(tmp, s[i] + '_2.fastq'))
     return s
 
 

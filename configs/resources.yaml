@@ -1,36 +1,20 @@
 #'''Command-line usage resource config.'''#
 
 
-# --- map_sort --- #
+# --- call_orfs --- #
 
-map_sort_threads: 20
-map_sort_mem_mb: 40000
-
-
-# --- metabat2_binning --- #
-
-metabat2_binning_threads: 20
-metabat2_binning_mem_mb: 80000
+bakta_threads: 20
+bakta_mem_mb: 80000
 
 
-# --- concoct_binning --- #
+# --- cluster_orfs --- #
 
-concoct_binning_mem_mb: 80000
-
-
-# --- semibin_binning --- #
-
-semibin_binning_threads: 20
-semibin_binning_mem_mb: 80000
+mmseqs_threads: 20
+mmseqs_mem_mb: 80000
 
 
-# --- maxbin2_binning --- #
+# --- run_alignments --- #
 
-maxbin2_binning_threads: 20
-maxbin2_binning_mem_mb: 80000
+diamond_threads: 20
+diamond_mem_mb: 80000
 
-
-# --- dastool_refinement --- #
-
-dastool_refinement_threads: 20
-dastool_refinement_mem_mb: 80000
