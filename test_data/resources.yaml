@@ -30,6 +30,18 @@ maxbin2_binning_threads: 10
 maxbin2_binning_mem_mb: 20000
 
 
+# --- metabinner_binning --- #
+
+metabinner_binning_threads: 10
+metabinner_binning_mem_mb: 20000
+
+
+# --- vamb_binning --- #
+
+vamb_binning_threads: 10
+vamb_binning_mem_mb: 20000
+
+
 # --- dastool_refinement --- #
 
 dastool_refinement_threads: 10

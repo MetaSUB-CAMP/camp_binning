@@ -14,7 +14,7 @@ dirs = Workflow_Dirs(config['work_dir'], 'binning')
 
 # Load sample names and input files 
 SAMPLES = ingest_samples(config['samples'], dirs.TMP)
-BINNERS = ['1_metabat2', '2_concoct', '3_semibin', '4_maxbin2']
+BINNERS = ['1_metabat2', '2_concoct', '3_semibin', '4_maxbin2', '5_metabinner', '6_vamb']
 
 
 # Specify the location of any external resources and scripts
@@ -327,14 +327,141 @@ rule move_maxbin2_bins:
         """
 
 
+rule metabinner_make_abundances:
+    input:
+        join(dirs.OUT,'4_maxbin2','{sample}','coverage.txt'),
+    output:
+        join(dirs.OUT,'5_metabinner','{sample}','abundances.txt'),
+    params:
+        out_dir = join(dirs.OUT,'5_metabinner','{sample}'),
+    shell:
+        """
+        mkdir -p {params.out_dir}
+        cat {input} | awk '{ if ($2>1000) print $0 }' | cut -f -1,4- > {output}
+        """
+
+
+rule metabinner_make_composition:
+    input:
+        join(dirs.TMP, '{sample}.fasta'),
+    output:
+        join(dirs.OUT,'5_metabinner','{sample}','composition.txt'),
+    conda:
+        join(config['env_yamls'], 'metabinner.yaml'),
+    params:
+        min_len = config['min_contig_len'],
+        tmp_out = join(dirs.TMP, '{sample}_kmer_4_f_' + str(config['min_contig_len']) + '.csv'),
+    shell:
+        """
+        MB_SCRIPT_PATH=$(dirname $(which run_metabinner.sh))/scripts
+        python ${MB_SCRIPT_PATH}/gen_kmer.py {input} {params.min_len} 4
+        mv {params.tmp_out} {output}
+        """
+
+
+rule metabinner_binning:
+    input:
+        cov = join(dirs.OUT,'5_metabinner','{sample}','abundances.txt'),
+        cmp = join(dirs.OUT,'5_metabinner','{sample}','composition.txt'),
+        ctg = join(dirs.TMP, '{sample}.fasta'),
+    output:
+        join(dirs.OUT,'5_metabinner','{sample}', 'metabinner_res', 'metabinner_result.tsv'),
+    conda:
+        join(config['env_yamls'], 'metabinner.yaml'),
+    log:
+        join(dirs.LOG,'metabinner_binning','{sample}.out'),
+    threads: config['metabinner_binning_threads'],
+    resources:
+        mem_mb=lambda wildcards, attempt: \
+            int(config['metabinner_binning_mem_mb']) + 40000 * attempt,
+    params:
+        out_dir=join(dirs.OUT,'5_metabinner','{sample}'),
+    shell:
+        """
+        rm -r {params.out_dir}
+        MB_SCRIPT_PATH=$(dirname $(which run_metabinner.sh))/scripts
+        run_metabinner.sh -a {input.ctg} -d {input.cov} -k {input.cmp} \
+            -p ${MB_SCRIPT_PATH}  -o {params.out_dir} -t {threads} > {log} 2>&1
+        """
+
+
+rule move_metabinner_bins:
+    input:
+        join(dirs.OUT,'5_metabinner','{sample}', 'metabinner_res', 'metabinner_result.tsv'),
+    output:
+        join(dirs.OUT,'5_metabinner','{sample}_done.txt'),
+    params:
+        in_dir = join(dirs.OUT, '5_metabinner','{sample}', 'metabinner_res/ensemble_res/greedy_cont_weight_3_mincomp_50.0_maxcont_15.0_bins/ensemble_3logtrans/addrefined2and3comps/greedy_cont_weight_3_mincomp_50.0_maxcont_15.0_bins'),
+        out_dir = join(dirs.OUT,'5_metabinner','{sample}', 'bins'),
+    shell:
+        """
+        mv {params.in_dir} {params.out_dir} 
+        N=0
+        for i in $(ls {params.out_dir} | grep .fna); do
+            mv {params.in_dir}/$i {params.out_dir}/bin.${{N}}.fa
+            N=$((N + 1))
+        done
+        touch {output}
+        """
+
+
+rule vamb_binning:
+    input:
+        ctg = join(dirs.TMP, '{sample}.fasta'),
+        bam = join(dirs.OUT, '0_contig_coverage', '{sample}', 'coverage.bam'),
+    output:
+        join(dirs.OUT, '6_vamb', '{sample}', 'clusters.tsv'),
+    log:
+        join(dirs.LOG, 'vamb_binning', '{sample}.out'),
+    conda:
+        join(config['env_yamls'], 'vamb.yaml'),
+    threads: config['vamb_binning_threads'],
+    resources:
+        mem_mb = lambda wildcards, attempt: \
+              int(config['vamb_binning_mem_mb']) + 40000 * attempt,
+    params:
+        out_dir = join(dirs.OUT, '6_vamb', '{sample}'),
+        min_len = config['min_contig_len'],
+        min_bin = config['min_bin_size'],
+        test_flags = config['test_flags'],
+    shell:
+        """
+        rm -r {params.out_dir}
+        vamb --outdir {params.out_dir} \
+            --fasta {input.ctg} \
+            --bamfiles {input.bam} \
+            -m {params.min_len} \
+            --minfasta {params.min_bin} \
+            {params.test_flags} > {log} 2>&1 
+        """
+
+
+rule split_vamb_output:
+    input:
+        vamb = join(dirs.OUT, '6_vamb', '{sample}', 'clusters.tsv'),
+        ctg = join(dirs.TMP, '{sample}.fasta'),
+    output:
+        join(dirs.OUT, '6_vamb', '{sample}_done.txt'),
+    conda:
+        join(config['env_yamls'], 'vamb.yaml'),
+    params:
+        in_dir = join(dirs.OUT, '6_vamb', '{sample}'),
+        out_dir = join(dirs.OUT, '6_vamb', '{sample}', 'bins'),
+        split_script = join(dirs_scr, 'split_vamb_output.py'),
+    shell:
+        """
+        python {params.split_script} {input.vamb} {input.ctg} {params.in_dir} {params.out_dir}
+        """
+
+
 rule make_dastool_input:
     input:
         join(dirs.OUT, '{binner}', '{sample}_done.txt'),
     output:
-        join(dirs.OUT, '5_dastool', '{sample}', '{binner}.tsv'),
+        join(dirs.OUT, '7_dastool', '{sample}', '{binner}.tsv'),
     params:
         in_dir = join(dirs.OUT, '{binner}', '{sample}', 'bins'),
-        out_dir = join(dirs.OUT, '5_dastool', '{sample}'),
+        out_dir = join(dirs.OUT, '7_dastool', '{sample}'),
         make_script = join(dirs_scr, 'Fasta_to_Contig2Bin.sh'),
     shell:
         """
@@ -346,9 +473,9 @@ rule make_dastool_input:
 rule dastool_refinement:
     input:
         ctg = join(dirs.TMP, '{sample}.fasta'),
-        tsv = lambda wildcards: expand(join(dirs.OUT, '5_dastool', '{sample}', '{binner}.tsv'), sample = wildcards.sample, binner = BINNERS)
+        tsv = lambda wildcards: expand(join(dirs.OUT, '7_dastool', '{sample}', '{binner}.tsv'), sample = wildcards.sample, binner = BINNERS)
     output:
-        join(dirs.OUT, '5_dastool', '{sample}', 'refined_DASTool_contig2bin.tsv'),
+        join(dirs.OUT, '7_dastool', '{sample}', 'refined_DASTool_contig2bin.tsv'),
     log:
         join(dirs.LOG, 'dastool_refinement', '{sample}.out'),
     conda:
@@ -360,7 +487,7 @@ rule dastool_refinement:
         attempt = lambda wildcards, attempt: attempt,
     params:
         binners = [b.split('_')[1] for b in BINNERS],
-        prefix = join(dirs.OUT, '5_dastool', '{sample}', 'refined'),
+        prefix = join(dirs.OUT, '7_dastool', '{sample}', 'refined'),
     shell:
         """
         THRESH=0.5
@@ -380,12 +507,12 @@ rule dastool_refinement:
 
 rule move_dastool_bins:
     input:
-        join(dirs.OUT, '5_dastool', '{sample}', 'refined_DASTool_contig2bin.tsv'),
+        join(dirs.OUT, '7_dastool', '{sample}', 'refined_DASTool_contig2bin.tsv'),
     output:
-        join(dirs.OUT, '5_dastool', '{sample}_done.txt'),
+        join(dirs.OUT, '7_dastool', '{sample}_done.txt'),
     params:
-        in_dir = join(dirs.OUT, '5_dastool', '{sample}', 'refined_DASTool_bins'),
-        out_dir = join(dirs.OUT, '5_dastool', '{sample}', 'bins'),
+        in_dir = join(dirs.OUT, '7_dastool', '{sample}', 'refined_DASTool_bins'),
+        out_dir = join(dirs.OUT, '7_dastool', '{sample}', 'bins'),
     shell:
         """
         mkdir -p {params.out_dir}
@@ -418,7 +545,7 @@ rule step_statistics:
 
 rule concat_statistics:
     input:
-        expand(join(dirs.OUT, '{binner}', '{sample}', 'bin_stats.csv'), binner = BINNERS + ['5_dastool'], sample = SAMPLES),
+        expand(join(dirs.OUT, '{binner}', '{sample}', 'bin_stats.csv'), binner = BINNERS + ['7_dastool'], sample = SAMPLES),
     output:
         join(dirs.OUT, 'final_reports', 'bin_stats.csv'),
     shell:
@@ -429,7 +556,7 @@ rule concat_statistics:
 
 rule concat_summaries:
     input:
-        expand(join(dirs.OUT, '{binner}', '{sample}', 'bin_summ.csv'), binner = BINNERS + ['5_dastool'], sample = SAMPLES),
+        expand(join(dirs.OUT, '{binner}', '{sample}', 'bin_summ.csv'), binner = BINNERS + ['7_dastool'], sample = SAMPLES),
     output:
         join(dirs.OUT, 'final_reports', 'bin_summ.csv'),
     shell:
@@ -441,7 +568,7 @@ rule concat_summaries:
 rule make_config:
     input:
         expand(join(dirs.OUT, '{binner}', '{sample}_done.txt'), \
-                      binner = BINNERS + ['5_dastool'], sample = SAMPLES),
+                      binner = BINNERS + ['7_dastool'], sample = SAMPLES),
     output:
         join(dirs.OUT, 'final_reports', 'samples.csv'),
     params:

@@ -19,7 +19,7 @@ overlap_size:     0
 
 # --- vamb_binning --- #
 
-min_bin_size: 2500
+min_bin_size: 500000
 # Test-only-values: '-e 2 -t 2 -q 1'
 # Keep blank for actual runs
 test_flags: ''

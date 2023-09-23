@@ -60,14 +60,14 @@ class Workflow_Dirs:
         self.TMP = join(work_dir, 'tmp')
         self.LOG = join(work_dir, 'logs')
         check_make(self.OUT)
-        out_dirs = ['0_contig_coverage', '1_metabat2', '2_concoct', '3_semibin', '4_maxbin2', '5_dastool', 'final_reports']
+        out_dirs = ['0_contig_coverage', '1_metabat2', '2_concoct', '3_semibin', '4_maxbin2', '5_metabinner', '6_vamb', '7_dastool', 'final_reports']
         for d in out_dirs:
             check_make(join(self.OUT, d))
         # Add a subdirectory for symlinked-in input files
         check_make(self.TMP)
         # Add custom subdirectories to organize rule logs
         check_make(self.LOG)
-        log_dirs = ['map_sort', 'calculate_depth', 'metabat2_binning', 'concoct_binning', 'semibin_binning', 'maxbin2_binning', 'dastool_refinement']
+        log_dirs = ['map_sort', 'calculate_depth', 'metabat2_binning', 'concoct_binning', 'semibin_binning', 'maxbin2_binning', 'metabinner_binning', 'vamb_binning', 'dastool_refinement']
         for d in log_dirs:
             check_make(join(self.LOG, d))
 
