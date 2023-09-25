@@ -32,9 +32,14 @@ model_environment: 'human_gut'
 
 # --- maxbin2_binning --- #
 
-maxbin2_script: '/path/to/MaxBin-2.2.7/run_MaxBin.pl'
+maxbin2_script: '/home/lam4003/bin/MaxBin-2.2.7/run_MaxBin.pl'
+
+
+# --- metabinner_binning --- #
+
+metabinner_env: '/home/lam4003/bin/camp_binning/conda_envs/6de558979255c142cdea454d816f4b6a/'
 
 
 # --- das_tool_refinement --- #
 
-ext: '/path/to/camp_binning/workflow/ext'
+ext: '/home/lam4003/bin/camp_binning/workflow/ext'

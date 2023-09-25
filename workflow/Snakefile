@@ -337,7 +337,7 @@ rule metabinner_make_abundances:
     shell:
         """
         mkdir -p {params.out_dir}
-        cat {input} | awk '{ if ($2>1000) print $0 }' | cut -f -1,4- > {output}
+        cat {input} | awk '{{ if ($2>1000) print $0 }}' | cut -f -1,4- > {output}
         """
 
 
@@ -351,10 +351,10 @@ rule metabinner_make_composition:
     params:
         min_len = config['min_contig_len'],
         tmp_out = join(dirs.TMP, '{sample}_kmer_4_f_' + str(config['min_contig_len']) + '.csv'),
+        mb_path = config['metabinner_env'],
     shell:
         """
-        MB_SCRIPT_PATH=$(dirname $(which run_metabinner.sh))/scripts
-        python ${MB_SCRIPT_PATH}/gen_kmer.py {input} {params.min_len} 4
+        python {params.mb_path}/bin/scripts/gen_kmer.py {input} {params.min_len} 4
         mv {params.tmp_out} {output}
         """
 
@@ -376,12 +376,12 @@ rule metabinner_binning:
             int(config['metabinner_binning_mem_mb']) + 40000 * attempt,
     params:
         out_dir=join(dirs.OUT,'5_metabinner','{sample}'),
+        mb_path = config['metabinner_env'],
     shell:
         """
         rm -r {params.out_dir}
-        MB_SCRIPT_PATH=$(dirname $(which run_metabinner.sh))/scripts
         run_metabinner.sh -a {input.ctg} -d {input.cov} -k {input.cmp} \
-            -p ${MB_SCRIPT_PATH}  -o {params.out_dir} -t {threads} > {log} 2>&1
+            -p {params.mb_path}/bin/  -o {params.out_dir} -t {threads} > {log} 2>&1
         """
 
 

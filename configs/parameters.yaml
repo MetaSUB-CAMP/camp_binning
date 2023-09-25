@@ -35,6 +35,11 @@ model_environment: 'human_gut'
 maxbin2_script: ''
 
 
+# --- metabinner_binning --- #
+
+metabinner_env: ''
+
+
 # --- das_tool_refinement --- #
 
 ext: ''
