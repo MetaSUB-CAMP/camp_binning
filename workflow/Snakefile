@@ -329,15 +329,17 @@ rule move_maxbin2_bins:
 
 rule metabinner_make_abundances:
     input:
-        join(dirs.OUT,'4_maxbin2','{sample}','coverage.txt'),
+        join(dirs.OUT,'4_maxbin2','{sample}','abundances.txt'),
     output:
-        join(dirs.OUT,'5_metabinner','{sample}','abundances.txt'),
+        join(dirs.OUT,'5_metabinner','{sample}_abundances.txt'),
     params:
+        min_len = config['min_contig_len'],
         out_dir = join(dirs.OUT,'5_metabinner','{sample}'),
     shell:
         """
         mkdir -p {params.out_dir}
-        cat {input} | awk '{{ if ($2>1000) print $0 }}' | cut -f -1,4- > {output}
+        MIN_LEN={params.min_len}
+        cat {input} | awk '{{ if ($2>$MIN_LEN) print $0 }}' | cut -f -1,4- > {output}
         """
 
 
@@ -345,12 +347,12 @@ rule metabinner_make_composition:
     input:
         join(dirs.TMP, '{sample}.fasta'),
     output:
-        join(dirs.OUT,'5_metabinner','{sample}','composition.txt'),
+        join(dirs.OUT,'5_metabinner','{sample}_composition.txt'),
     conda:
         join(config['env_yamls'], 'metabinner.yaml'),
     params:
         min_len = config['min_contig_len'],
-        tmp_out = join(dirs.TMP, '{sample}_kmer_4_f_' + str(config['min_contig_len']) + '.csv'),
+        tmp_out = join(dirs.TMP, '{sample}_kmer_4_f' + str(config['min_contig_len']) + '.csv'),
         mb_path = config['metabinner_env'],
     shell:
         """
@@ -361,8 +363,8 @@ rule metabinner_make_composition:
 
 rule metabinner_binning:
     input:
-        cov = join(dirs.OUT,'5_metabinner','{sample}','abundances.txt'),
-        cmp = join(dirs.OUT,'5_metabinner','{sample}','composition.txt'),
+        cov = join(dirs.OUT,'5_metabinner','{sample}_abundances.txt'),
+        cmp = join(dirs.OUT,'5_metabinner','{sample}_composition.txt'),
         ctg = join(dirs.TMP, '{sample}.fasta'),
     output:
         join(dirs.OUT,'5_metabinner','{sample}', 'metabinner_res', 'metabinner_result.tsv'),
@@ -398,7 +400,7 @@ rule move_metabinner_bins:
         mv {params.in_dir} {params.out_dir} 
         N=0
         for i in $(ls {params.out_dir} | grep .fna); do
-            mv {params.in_dir}/$i {params.out_dir}/bin.${{N}}.fa
+            mv {params.out_dir}/$i {params.out_dir}/bin.${{N}}.fa
             N=$((N + 1))
         done
         touch {output}
@@ -447,10 +449,11 @@ rule split_vamb_output:
     params:
         in_dir = join(dirs.OUT, '6_vamb', '{sample}'),
         out_dir = join(dirs.OUT, '6_vamb', '{sample}', 'bins'),
+        min_bin = config['min_bin_size'],
         split_script = join(dirs_scr, 'split_vamb_output.py'),
     shell:
         """
-        python {params.split_script} {input.vamb} {input.ctg} {params.in_dir} {params.out_dir}
+        python {params.split_script} {input.vamb} {input.ctg} {params.min_bin} {params.in_dir} {params.out_dir}
         """
 
 

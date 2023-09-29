@@ -6,10 +6,20 @@ import numpy as np
 
 
 def extract_lens(ctg_names, fasta):
-    if 'NODE' in open(fasta, 'r').readline(): # >NODE_1_length_28207_cov_4.594629
-        return [int(i.split('_')[3]) for i in ctg_names]
-    else: # >k141_1046 flag=1 multi=4.0000 len=388
-        return [int(i.split('_')[-1].split('=')[1]) for i in ctg_names]
+    unb_raw_lst = []
+    with open(abspath(fasta), 'r') as f:
+        curr_len = 0
+        unbinned = False
+        for l in f:
+            if l.startswith('>'):
+                if unbinned: # If the previous contig was unbinned
+                    unb_raw_lst.append(curr_len)
+                unbinned = True if l.strip() not in ctg_names else False
+                curr_len = 0
+            else:
+                if unbinned:
+                    curr_len += len(l.strip())
+    return unb_raw_lst
         
 
 def main(args): # sample_name,binners,bin_num,num_ctgs,total_size,mean_bin_size,stdev_bin_size
@@ -22,27 +32,37 @@ def main(args): # sample_name,binners,bin_num,num_ctgs,total_size,mean_bin_size,
             if l.startswith('>'):
                 asm_name_lst.append(l.strip())
     bin_name_lst = []
+    bin_stat_lst = []
     bin_len_lst = []
     for fi in glob.glob(join(args.in_dir, '*.fa')):
         bin_num = basename(fi).split('.')[1]
         with open(abspath(fi), 'r') as f:
             ctg_lens = []
+            curr_name = ''
             curr_len = 0
             for l in f:
                 if l.startswith('>'):
-                    bin_name_lst.append(l.strip())
+                    bin_name_lst.append(curr_name)
                     ctg_lens.append(curr_len)
+                    bin_len_lst.append(curr_len)
+                    curr_name = l.strip()
                     curr_len = 0
                 else:
                     curr_len += len(l.strip())
+            bin_name_lst.append(curr_name)
             ctg_lens.append(curr_len)
+            bin_name_lst.pop(0)  # Remove the first empty string
             ctg_lens.pop(0)  # Remove the first 0
-            bin_len_lst.append([sample, binner, bin_num, len(ctg_lens), sum(ctg_lens), sum(ctg_lens) / len(ctg_lens), np.std(ctg_lens)])
-    pd.DataFrame(bin_len_lst).to_csv(join(args.out_dir, 'bin_stats.csv'), header = False, index = False)
-    binned_name_lst = [n for n in asm_name_lst if n in bin_name_lst]
-    bin_len_lst = extract_lens(binned_name_lst, args.fasta)
+            bin_len_lst.pop(0) # Remove the first 0
+            bin_stat_lst.append([sample, binner, bin_num, len(ctg_lens), sum(ctg_lens), sum(ctg_lens) / len(ctg_lens), np.std(ctg_lens)])
+    pd.DataFrame(bin_stat_lst).to_csv(join(args.out_dir, 'bin_stats.csv'), header = False, index = False)
     unbinned_name_lst = [n for n in asm_name_lst if n not in bin_name_lst]
-    unb_raw_lst = extract_lens(unbinned_name_lst, args.fasta)
+    if 'NODE' in open(fasta, 'r').readline():  # MetaSPAdes contig naming scheme >NODE_1_length_28207_cov_4.594629
+        unb_raw_lst = [int(i.split('_')[3]) for i in unbinned_name_lst]
+    elif 'flag=1' in open(fasta, 'r').readline(): # MegaHIT contig naming scheme >k141_1046 flag=1 multi=4.0000 len=388
+        unb_raw_lst = [int(i.split('_')[-1].split('=')[1]) for i in unbinned_name_lst]
+    else: # Some other naming scheme
+        unb_raw_lst = extract_lens(bin_name_lst, args.fasta)
     unb_len_lst = [l for l in unb_raw_lst if l > int(args.min_ctg_len)]
     asm_over_min = sum(bin_len_lst) + sum(unb_len_lst)
     avg_bin_size = sum(bin_len_lst) / len(bin_len_lst) if len(bin_len_lst) > 0 else 0
