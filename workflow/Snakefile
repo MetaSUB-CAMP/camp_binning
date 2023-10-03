@@ -329,7 +329,7 @@ rule move_maxbin2_bins:
 
 rule metabinner_make_abundances:
     input:
-        join(dirs.OUT,'4_maxbin2','{sample}','abundances.txt'),
+        join(dirs.OUT,'4_maxbin2','{sample}','coverage.txt'),
     output:
         join(dirs.OUT,'5_metabinner','{sample}_abundances.txt'),
     params:
@@ -337,9 +337,8 @@ rule metabinner_make_abundances:
         out_dir = join(dirs.OUT,'5_metabinner','{sample}'),
     shell:
         """
-        mkdir -p {params.out_dir}
         MIN_LEN={params.min_len}
-        cat {input} | awk '{{ if ($2>$MIN_LEN) print $0 }}' | cut -f -1,4- > {output}
+        cat {input} | awk '$2>=min_len {{ print $0 }}' min_len=$MIN_LEN | cut -f -1,4- > {output}
         """
 
 
@@ -352,12 +351,14 @@ rule metabinner_make_composition:
         join(config['env_yamls'], 'metabinner.yaml'),
     params:
         min_len = config['min_contig_len'],
-        tmp_out = join(dirs.TMP, '{sample}_kmer_4_f' + str(config['min_contig_len']) + '.csv'),
+        prefix = join(dirs.TMP, '{sample}_kmer_4_f'),
         mb_path = config['metabinner_env'],
     shell:
         """
-        python {params.mb_path}/bin/scripts/gen_kmer.py {input} {params.min_len} 4
-        mv {params.tmp_out} {output}
+        MIN_LEN=$(expr {params.min_len} - 1)
+        python {params.mb_path}/bin/scripts/gen_kmer.py {input} $MIN_LEN 4
+        TMP_OUT={params.prefix}${MIN_LEN}.csv
+        mv $TMP_OUT {output}
         """
 
 

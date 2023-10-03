@@ -57,9 +57,9 @@ def main(args): # sample_name,binners,bin_num,num_ctgs,total_size,mean_bin_size,
             bin_stat_lst.append([sample, binner, bin_num, len(ctg_lens), sum(ctg_lens), sum(ctg_lens) / len(ctg_lens), np.std(ctg_lens)])
     pd.DataFrame(bin_stat_lst).to_csv(join(args.out_dir, 'bin_stats.csv'), header = False, index = False)
     unbinned_name_lst = [n for n in asm_name_lst if n not in bin_name_lst]
-    if 'NODE' in open(fasta, 'r').readline():  # MetaSPAdes contig naming scheme >NODE_1_length_28207_cov_4.594629
+    if 'NODE' in open(args.fasta, 'r').readline():  # MetaSPAdes contig naming scheme >NODE_1_length_28207_cov_4.594629
         unb_raw_lst = [int(i.split('_')[3]) for i in unbinned_name_lst]
-    elif 'flag=1' in open(fasta, 'r').readline(): # MegaHIT contig naming scheme >k141_1046 flag=1 multi=4.0000 len=388
+    elif 'flag=1' in open(args.fasta, 'r').readline(): # MegaHIT contig naming scheme >k141_1046 flag=1 multi=4.0000 len=388
         unb_raw_lst = [int(i.split('_')[-1].split('=')[1]) for i in unbinned_name_lst]
     else: # Some other naming scheme
         unb_raw_lst = extract_lens(bin_name_lst, args.fasta)

@@ -16,4 +16,4 @@ for f in listdir(sys.argv[4]):
     if f.endswith('.fna'): # 1.fna, 2.fna, etc.
         bin_num = f.split('.')[0]
         shutil.copy(join(sys.argv[4], f), join(sys.argv[5], 'bin.' + bin_num + '.fa'))
-open(sys.argv[3] + '_done.txt', 'w').write('')
+open(sys.argv[4] + '_done.txt', 'w').write('')
