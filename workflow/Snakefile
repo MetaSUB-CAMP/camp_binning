@@ -588,13 +588,13 @@ rule make_config:
             if s not in dct:
                 dct[s] = {}
             dct[s][d] = join(str(i).replace('_done.txt', '/bins'))
-        for s in samples:
-            dct[s]['illumina_fwd'] = join(str(params.tmp_dir),s + '_1.fastq.gz')
-            dct[s]['illumina_rev'] = join(str(params.tmp_dir),s + '_2.fastq.gz')
         df = pd.DataFrame.from_dict(dct, orient ='index')
         df.reset_index(inplace = True)
         df.rename(columns = {'index': 'sample_name'}, inplace = True)
         df.to_csv(str(output), index = False)
 
+        # for s in samples:
+        #     dct[s]['illumina_fwd'] = join(str(params.tmp_dir),s + '_1.fastq.gz')
+        #     dct[s]['illumina_rev'] = join(str(params.tmp_dir),s + '_2.fastq.gz')
 
 
