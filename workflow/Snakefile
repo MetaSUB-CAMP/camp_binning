@@ -492,9 +492,10 @@ rule dastool_refinement:
     params:
         binners = [b.split('_')[1] for b in BINNERS],
         prefix = join(dirs.OUT, '7_dastool', '{sample}', 'refined'),
+        threshold = config['dastool_threshold'],
     shell:
         """
-        THRESH=0.5
+        THRESH={params.threshold}
         if [[ {resources.attempt} -gt 1 ]] 
         then
             ((DECREM={resources.attempt}-1))

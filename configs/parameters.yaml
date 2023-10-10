@@ -43,3 +43,4 @@ metabinner_env: ''
 # --- das_tool_refinement --- #
 
 ext: ''
+dastool_threshold: 0.5
