@@ -337,8 +337,7 @@ rule metabinner_make_abundances:
         out_dir = join(dirs.OUT,'5_metabinner','{sample}'),
     shell:
         """
-        MIN_LEN={params.min_len}
-        cat {input} | awk '$2>=min_len {{ print $0 }}' min_len=$MIN_LEN | cut -f -1,4- > {output}
+        cat {input} | awk '$2>=min_len {{ print $0 }}' min_len={params.min_len} | cut -f -1,4- > {output}
         """
 
 
@@ -350,15 +349,13 @@ rule metabinner_make_composition:
     conda:
         join(config['env_yamls'], 'metabinner.yaml'),
     params:
+        kmer_scr = join(dirs_scr, 'gen_kmer.py'),
         min_len = config['min_contig_len'],
-        prefix = join(dirs.TMP, '{sample}_kmer_4_f'),
-        mb_path = config['metabinner_env'],
+        tmp_out = join(dirs.TMP, '{sample}_kmer_4_f' + str(config['min_contig_len']) + '.csv'),
     shell:
         """
-        MIN_LEN=$(expr {params.min_len} - 1)
-        python {params.mb_path}/bin/scripts/gen_kmer.py {input} $MIN_LEN 4
-        TMP_OUT={params.prefix}${MIN_LEN}.csv
-        mv $TMP_OUT {output}
+        python {params.kmer_scr} {input} {params.min_len} 4
+        mv {params.tmp_out} {output}
         """
 
 
