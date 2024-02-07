@@ -1,7 +1,7 @@
 # CAMP Binning
 
 
-[![Documentation Status](https://img.shields.io/readthedocs/camp_binning)](https://camp-documentation.readthedocs.io/en/latest/binning.html) ![Version](https://img.shields.io/badge/version-0.9.6-brightgreen)
+[![Documentation Status](https://img.shields.io/readthedocs/camp_binning)](https://camp-documentation.readthedocs.io/en/latest/binning.html) ![Version](https://img.shields.io/badge/version-0.9.7-brightgreen)
 
 ## Overview
 
@@ -34,6 +34,7 @@ tar -xf download
 spack load gcc@6.3.0 # This is only necessary for HPCs with extremely old gcc's 
 cd MaxBin-2.2.7/src
 make
+cd ../
 ./autobuild_auxiliary
 wget https://github.com/loneknightpy/idba/releases/download/1.1.3/idba-1.1.3.tar.gz
 tar -xf idba-1.1.3.tar.gz
