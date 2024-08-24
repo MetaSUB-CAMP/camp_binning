@@ -31,7 +31,7 @@ dependencies:
   - cffi=1.15.0=py39h4bc2ebd_0
   - charset-normalizer=2.0.12=pyhd8ed1ab_0
   - click=8.1.2=py39hf3d152e_0
-  - click_default_group=1.2=py_1
+  - click-default-group=1.2.4=pyhd8ed1ab_0
   - coin-or-cbc=2.10.7=h3786ebc_0
   - coin-or-cgl=0.60.3=he7e83c3_2
   - coin-or-clp=1.17.6=h256e9bb_3

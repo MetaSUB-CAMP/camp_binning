@@ -35,6 +35,8 @@ def main(args): # sample_name,binners,bin_num,num_ctgs,total_size,mean_bin_size,
     bin_stat_lst = []
     bin_len_lst = []
     for fi in glob.glob(join(args.in_dir, '*.fa')):
+        if 'unbinned' in fi:
+            continue
         bin_num = basename(fi).split('.')[1]
         with open(abspath(fi), 'r') as f:
             ctg_lens = []

@@ -351,11 +351,9 @@ rule metabinner_make_composition:
     params:
         kmer_scr = join(dirs_scr, 'gen_kmer.py'),
         min_len = config['min_contig_len'],
-        tmp_out = join(dirs.TMP, '{sample}_kmer_4_f' + str(config['min_contig_len']) + '.csv'),
     shell:
         """
-        python {params.kmer_scr} {input} {params.min_len} 4
-        mv {params.tmp_out} {output}
+        python {params.kmer_scr} {input} {params.min_len} 4 {output}
         """
 
 

@@ -1,15 +1,15 @@
 # CAMP Binning
 
 
-[![Documentation Status](https://img.shields.io/readthedocs/camp_binning)](https://camp-documentation.readthedocs.io/en/latest/binning.html) ![Version](https://img.shields.io/badge/version-0.9.7-brightgreen)
+[![Documentation Status](https://img.shields.io/readthedocs/camp_binning)](https://camp-documentation.readthedocs.io/en/latest/binning.html) ![Version](https://img.shields.io/badge/version-0.9.8-brightgreen)
 
 ## Overview
 
 This module is designed to function as both a standalone MAG binning pipeline as well as a component of the larger CAMP metagenome analysis pipeline. As such, it is both self-contained (ex. instructions included for the setup of a versioned environment, etc.), and seamlessly compatible with other CAMP modules (ex. ingests and spawns standardized input/output config files, etc.). 
 
-As far as the binning procedure goes, the design philosophy is just to replicate the functionality of [MetaWRAP](https://github.com/bxlab/metaWRAP)(one of the original ensemble methods) with i) better dependency conflict management and ii) improved integration with new binning algorithms. 
+As far as the binning procedure goes, the design philosophy is just to replicate the functionality of [MetaWRAP](https://github.com/bxlab/metaWRAP) (one of the original ensemble methods) with i) better dependency conflict management and ii) improved integration with new binning algorithms. 
 
-Currently, the binning algorithms MetaBAT2, CONCOCT, SemiBin, and MaxBin2 are wrapped along with the bin refinement tool DAS Tool.
+Currently, the binning algorithms MetaBAT2, CONCOCT, SemiBin, MaxBin2, MetaBinner, and VAMB are wrapped along with the bin refinement tool DAS Tool.
 
 ## Installation
 
@@ -41,11 +41,23 @@ tar -xf idba-1.1.3.tar.gz
 cd idba-1.1.3/
 ./configure --prefix=/path/to/bin/MaxBin-2.2.7/auxiliary/idba-1.1.3 # IDBA-UD was not included in the auxiliary build
 make
-# Optional: Export or add the following to ~/.bashrc
+# Option 1: Modify MaxBin2's settings config with the locations of the auxiliary algorithms, or...
+vim /path/to/bin/MaxBin-2.2.7/setting
+# Option 2: Export or add the following to ~/.bashrc
 export PATH=$PATH:/path/to/bin/MaxBin-2.2.7:/path/to/bin/MaxBin-2.2.7/auxiliary/FragGeneScan_1.30:/path/to/bin/MaxBin-2.2.7/auxiliary/hmmer-3.1b1/src:/path/to/bin/MaxBin-2.2.7/auxiliary/bowtie2-2.2.3:/path/to/bin/MaxBin-2.2.7/auxiliary/idba-1.1.3/bin
 ```
 
-4. Update the relevant parameters (ex. `ext/` (the location of external tools and scripts) and `maxbin2_script` (the location of the MaxBin2 script)) in `test_data/parameters.yaml`.
+4. Pre-install the MetaBinner environment by dry-running the module.
+```Bash
+python /path/to/camp_binning/workflow/binning.py --dry_run \
+    -d /home/lam4003/bin/camp_binning/test_out \
+    -s /home/lam4003/bin/camp_binning/test_data/samples.csv
+
+# In the directory /path/to/camp_binning/conda_envs/, find the environment ID that corresponds to MetaBinner
+# /path/to/camp_binning/conda_envs/metabinner_env_id
+```
+
+4. Update the relevant parameters (ex. `ext/` (the location of external tools and scripts), `metabinner_env` (the location of the MetaBinner environment), and `maxbin2_script` (the location of the MaxBin2 script)) in `test_data/parameters.yaml`.
 
 5. Make sure the installed pipeline works correctly. With 40 threads and a maximum of 100 GB allocated, the test dataset should finish in approximately 35 minutes.
 ```Bash
