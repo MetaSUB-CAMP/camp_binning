@@ -1,7 +1,6 @@
 name: metabinner
 channels:
   - bioconda
-  - defaults
   - conda-forge
 dependencies:
   - _libgcc_mutex=0.1=conda_forge
@@ -96,4 +95,3 @@ dependencies:
   - xz=5.2.10=h5eee18b_1
   - zlib=1.2.13=hd590300_5
   - zstd=1.5.5=hc292b87_0
-prefix: /home/lam4003/bin/anaconda/envs/metabinner

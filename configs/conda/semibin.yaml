@@ -1,8 +1,7 @@
 name: semibin
 channels:
-  - conda-forge
   - bioconda
-  - defaults
+  - conda-forge
 dependencies:
   - _libgcc_mutex=0.1=conda_forge
   - _openmp_mutex=4.5=2_kmp_llvm
@@ -122,4 +121,3 @@ dependencies:
   - yaml=0.2.5=h7f98852_2
   - zlib=1.2.13=h166bdaf_4
   - zstd=1.5.2=h3eb15da_6
-prefix: /home/lam4003/bin/anaconda/envs/semibin

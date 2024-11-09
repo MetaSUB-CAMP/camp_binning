@@ -1,7 +1,7 @@
 # CAMP Binning
 
 
-[![Documentation Status](https://img.shields.io/readthedocs/camp_binning)](https://camp-documentation.readthedocs.io/en/latest/binning.html) ![Version](https://img.shields.io/badge/version-0.9.8-brightgreen)
+[![Documentation Status](https://img.shields.io/readthedocs/camp_binning)](https://camp-documentation.readthedocs.io/en/latest/binning.html) ![Version](https://img.shields.io/badge/version-0.9.9-brightgreen)
 
 ## Overview
 
@@ -19,7 +19,12 @@ git clone https://github.com/MetaSUB-CAMP/camp_binning
 ```
 
 2. Set up the conda environment using `configs/conda/binning.yaml`. 
+
+If you don't already have `conda` handy, we recommend installing `miniforge`, which is a minimal conda installer that, by default, installs packages from open-source community-driven channels such as `conda-forge`.
 ```Bash
+# If you don't already have conda on your system...
+# wget https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh
+
 # Create and activate conda environment 
 cd camp_binning
 conda env create -f configs/conda/binning.yaml
